@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Monster
   - Dust
+  - Crystal
   layers:
   - Default
   - TransparentFX
