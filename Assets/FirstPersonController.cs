@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class FirstPersonController : MonoBehaviour
 {
-    public float movementSpeed = 5f;
+    public float movementSpeed = 2.5f;
     public float mouseSensitivity = 2f;
-    public float upDownRange = 70f;
+    public float upDownRange = 50f;
 
     private Vector3 speed;
     private float forwardSpeed;
@@ -30,6 +30,9 @@ public class FirstPersonController : MonoBehaviour
 
     private CharacterController cc;
 
+    public static float stemina;
+    public static bool exhaustion;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -38,6 +41,12 @@ public class FirstPersonController : MonoBehaviour
         audioSource = GetComponent<AudioSource>();
         sphereCollider = GetComponent<SphereCollider>();
         Cursor.lockState = CursorLockMode.Locked;
+
+        runSpeed = movementSpeed * 2f;
+        stemina = 100f;
+        exhaustion = false;
+
+        StartCoroutine(Exhaustion());
     }
 
     // Update is called once per frame
@@ -50,20 +59,26 @@ public class FirstPersonController : MonoBehaviour
     //플레이어의 x축, z축 움직임을 담당
     private void FPMove()
     {
-        runSpeed = movementSpeed * 2;
+        if (stemina < 20)
+            exhaustion = true;
 
-        if (Input.GetKey(KeyCode.LeftShift)) //Shift 누를 경우 달리기
+        if (Input.GetAxis("Vertical") == 0 && Input.GetAxis("Horizontal") == 0) //가만히 있을때 발소리 안남
+        {
+            forwardSpeed = 0;
+            sideSpeed = 0;
+            sphereCollider.radius = 8f;
+
+            if (stemina < 100f)
+                stemina += Time.deltaTime * 20f;
+        }
+        else if (Input.GetKey(KeyCode.LeftShift) && !exhaustion && (forwardSpeed > 0 || sideSpeed != 0)) //Shift 누를 경우 달리기
         {
             forwardSpeed = Input.GetAxis("Vertical") * runSpeed;
             sideSpeed = Input.GetAxis("Horizontal") * runSpeed;
             audioSource.clip = audioClips[0];
             sphereCollider.radius = 15f;
-        }
-        else if(Input.GetAxis("Vertical") == 0 && Input.GetAxis("Horizontal") == 0) //가만히 있을때 발소리 안남
-        {
-            forwardSpeed = 0;
-            sideSpeed = 0;
-            sphereCollider.radius = 8f;
+
+            stemina -= Time.deltaTime * 10f;
         }
         else
         {
@@ -71,33 +86,35 @@ public class FirstPersonController : MonoBehaviour
             sideSpeed = Input.GetAxis("Horizontal") * movementSpeed;
             audioSource.clip = audioClips[1];
             sphereCollider.radius = 10f;
+
+            if (stemina < 100f)
+                stemina += Time.deltaTime * 15f;
         }
 
         //모션과 사운드
-        if (forwardSpeed == 0 && sideSpeed == 0)
+        if (forwardSpeed == 0 && sideSpeed == 0)    //멈췄을때
         {
             animator.runtimeAnimatorController = animatorControllers[0];
             audioSource.Pause();
         }
-        else if (Input.GetKey(KeyCode.LeftShift) && (forwardSpeed > 0 || sideSpeed != 0))
+        else if (Input.GetKey(KeyCode.LeftShift) && (forwardSpeed > 0 || sideSpeed != 0) && !exhaustion)   //달릴때
         {
             animator.runtimeAnimatorController = animatorControllers[2];
-            if(!audioSource.isPlaying)
+            if (!audioSource.isPlaying)
                 audioSource.Play();
         }
-        else if (forwardSpeed > 0 || sideSpeed != 0)
+        else if (forwardSpeed > 0 || sideSpeed != 0)    //앞으로 걸을때
         {
             animator.runtimeAnimatorController = animatorControllers[1];
             if (!audioSource.isPlaying)
                 audioSource.Play();
         }
-        else if (forwardSpeed < 0)
+        else if (forwardSpeed < 0)  //뒤로갈때
         {
             animator.runtimeAnimatorController = animatorControllers[3];
             if (!audioSource.isPlaying)
                 audioSource.Play();
         }
-
         verticalVelocity += Physics.gravity.y * Time.deltaTime;
 
         speed = new Vector3(sideSpeed, verticalVelocity, forwardSpeed);
@@ -120,7 +137,33 @@ public class FirstPersonController : MonoBehaviour
 
     private void OnControllerColliderHit(ControllerColliderHit colliderHit)
     {
-        if(colliderHit.gameObject.CompareTag("Monster"))    //게임끝
+        if (colliderHit.gameObject.CompareTag("Monster"))    //게임끝
             print(colliderHit.gameObject.name);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        //코인 습득(점수 증가)
+        if (other.CompareTag("Crystal"))
+        {
+            GameManager.Score += 1;
+            Destroy(other.gameObject);
+        }
+    }
+
+    IEnumerator Exhaustion()
+    {
+        while (true)
+        {
+            if (exhaustion)
+            {
+                yield return new WaitForSeconds(5f);
+                exhaustion = false;
+            }
+            else
+            {
+                yield return new WaitForSeconds(0.1f);
+            }
+        }
     }
 }
