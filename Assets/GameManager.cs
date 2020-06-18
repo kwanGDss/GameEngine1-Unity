@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -20,6 +21,9 @@ public class GameManager : MonoBehaviour
     private int enemyCount = 0;
     public static int Score { get; set; } = 0;
 
+    public static bool winner = false;
+    public static bool loser = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -29,12 +33,14 @@ public class GameManager : MonoBehaviour
         CreateItem();
         StartCoroutine(CreateEnemyCoroutine());
         StartCoroutine(WinGame());
+        StartCoroutine(LoseGame());
     }
 
     // Update is called once per frame
     void Update()
     {
-
+        if(GameObject.FindGameObjectWithTag("Crystal") == null)
+            winner = true;
     }
 
     private void CreateEnemy()
@@ -74,15 +80,48 @@ public class GameManager : MonoBehaviour
     {
         while (true)
         {
-            if (GameObject.FindGameObjectWithTag("Crystal") == null)
+            if (winner == true)
             {
-                print("GameWin!");
-                yield return new WaitForSeconds(5f);
+                yield return new WaitForSeconds(3f);
+                GameInitialize();
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+                SceneManager.LoadScene("StartScene");
             }
             else
             {
-                yield return new WaitForSeconds(5f);
+                yield return new WaitForSeconds(0.1f);
             }
         }
     }
+
+    IEnumerator LoseGame()
+    {
+        while (true)
+        {
+            if (loser == true)
+            {
+                yield return new WaitForSeconds(3f);
+                GameInitialize();
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+                SceneManager.LoadScene("StartScene");
+            }
+            else
+            {
+                yield return new WaitForSeconds(0.1f);
+            }
+        }
+    }
+
+    private void GameInitialize()
+    {
+        FirstPersonController.stemina = 100;
+        FirstPersonController.exhaustion = false;
+        PauseMenu.paused = false;
+        winner = false;
+        loser = false;
+        Score = 0;
+    }
 }
+

@@ -1,12 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class FirstPersonController : MonoBehaviour
 {
-    public float movementSpeed = 2.5f;
-    public float mouseSensitivity = 2f;
-    public float upDownRange = 50f;
+    private float movementSpeed = 3f;
+    private float mouseSensitivity = 2f;
+    private float upDownRange = 50f;
 
     private Vector3 speed;
     private float forwardSpeed;
@@ -41,6 +43,7 @@ public class FirstPersonController : MonoBehaviour
         audioSource = GetComponent<AudioSource>();
         sphereCollider = GetComponent<SphereCollider>();
         Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
 
         runSpeed = movementSpeed * 2f;
         stemina = 100f;
@@ -52,8 +55,15 @@ public class FirstPersonController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        FPMove();
-        FPRotate();
+        if (!PauseMenu.paused)
+        {
+            FPMove();
+            FPRotate();
+        }
+        else
+        {
+            audioSource.Pause();
+        }
     }
 
     //플레이어의 x축, z축 움직임을 담당
@@ -137,8 +147,11 @@ public class FirstPersonController : MonoBehaviour
 
     private void OnControllerColliderHit(ControllerColliderHit colliderHit)
     {
-        if (colliderHit.gameObject.CompareTag("Monster"))    //게임끝
-            print(colliderHit.gameObject.name);
+        if (colliderHit.gameObject.CompareTag("Monster"))
+        {
+            //게임 오버
+            GameManager.loser = true;
+        }
     }
 
     private void OnTriggerEnter(Collider other)

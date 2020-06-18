@@ -41,6 +41,9 @@ TagManager:
   - 
   - 
   m_SortingLayers:
+  - name: MainMenuImage
+    uniqueID: 851295091
+    locked: 0
   - name: Default
     uniqueID: 0
     locked: 0

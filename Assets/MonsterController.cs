@@ -20,7 +20,7 @@ public class MonsterController : MonoBehaviour
 
         navMesh.SetDestination(randomTransform[random].transform.position);
 
-        InvokeRepeating("CheckArriveDust", 3f, 10f);
+        InvokeRepeating("CheckArriveDust", 3f, 1f);
     }
 
     // Update is called once per frame
